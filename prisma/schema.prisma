@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+enum SourceType {
+  YOUTUBE
+  PDF
+  AUDIO
+}
+
+enum KitMode {
+  STUDY
+  TUTORIAL
+  EXECUTIVE
+}
+
+model Profile {
+  id                     String   @id @db.Uuid
+  email                  String   @unique
+  fullName               String?
+  avatarUrl              String?
+  plan                   Plan     @default(FREE)
+  weeklyCreditsUsed      Int      @default(0)
+  creditsResetAt         DateTime @default(now())
+  lemonSqueezyCustomerId String?  @unique
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  kits Kit[]
+
+  @@map("profiles")
+}
+
+model Kit {
+  id              String     @id @default(cuid())
+  slug            String     @unique
+  userId          String?    @db.Uuid
+  user            Profile?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sourceType      SourceType @default(YOUTUBE)
+  sourceUrl       String
+  videoId         String?
+  title           String
+  channelName     String?
+  durationSeconds Int?
+  mode            KitMode    @default(STUDY)
+  summaryJson     Json
+  isPublic        Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+
+  actionItems   ActionItem[]
+  flashcards    Flashcard[]
+  quizQuestions QuizQuestion[]
+
+  @@index([userId])
+  @@index([isPublic, createdAt])
+  @@map("kits")
+}
+
+model ActionItem {
+  id                String  @id @default(cuid())
+  kitId             String
+  kit               Kit     @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  orderIndex        Int
+  timestampSeconds  Int
+  title             String
+  description       String  @db.Text
+  codeOrToolSnippet String? @db.Text
+  isCompleted       Boolean @default(false)
+
+  @@index([kitId, orderIndex])
+  @@map("action_items")
+}
+
+model Flashcard {
+  id         String  @id @default(cuid())
+  kitId      String
+  kit        Kit     @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  orderIndex Int
+  front      String  @db.Text
+  back       String  @db.Text
+  mastered   Boolean @default(false)
+
+  @@index([kitId, orderIndex])
+  @@map("flashcards")
+}
+
+model QuizQuestion {
+  id           String   @id @default(cuid())
+  kitId        String
+  kit          Kit      @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  orderIndex   Int
+  question     String   @db.Text
+  options      String[]
+  correctIndex Int
+  explanation  String   @db.Text
+
+  @@index([kitId, orderIndex])
+  @@map("quiz_questions")
+}

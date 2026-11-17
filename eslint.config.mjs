@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored agent skills (Impeccable, UI/UX Pro Max); not project code.
+    ".agent/**",
+    ".agents/**",
+    "design-system/**",
   ]),
 ]);
 

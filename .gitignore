@@ -1,6 +1,11 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ==============================================================================
+# Claros — Root .gitignore
+# Next.js (App Router), Prisma, Supabase, Vercel & AI Tooling
+# ==============================================================================
 
-# dependencies
+# ------------------------------------------------------------------------------
+# Dependencies & Package Managers
+# ------------------------------------------------------------------------------
 /node_modules
 /.pnp
 .pnp.*
@@ -10,32 +15,70 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+# ------------------------------------------------------------------------------
+# Next.js & Build Outputs
+# ------------------------------------------------------------------------------
 /.next/
 /out/
+/build/
+/dist/
+*.tsbuildinfo
+next-env.d.ts
 
-# production
-/build
+# ------------------------------------------------------------------------------
+# Environment Variables (Keep .env.example tracked)
+# ------------------------------------------------------------------------------
+.env*
+!.env.example
 
-# misc
+# ------------------------------------------------------------------------------
+# Vercel
+# ------------------------------------------------------------------------------
+.vercel
+
+# ------------------------------------------------------------------------------
+# AI Agent Skills, Plugins & Local State
+# ------------------------------------------------------------------------------
+.agent/
+.agents/
+.antigravity/
+.gemini/
+.claude/
+.cursor/
+.skills/
+.impeccable/
+.uipro/
+
+# ------------------------------------------------------------------------------
+# Python & Tooling Cache (ui-ux-pro-max-cli / local scripts)
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# ------------------------------------------------------------------------------
+# OS & Editor Files
+# ------------------------------------------------------------------------------
 .DS_Store
+Thumbs.db
 *.pem
 
-# debug
+# VS Code (preserve shared extensions config)
+.vscode/*
+!.vscode/extensions.json
+
+# JetBrains
+.idea/
+
+# ------------------------------------------------------------------------------
+# Logs & Testing
+# ------------------------------------------------------------------------------
+/coverage
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
