@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateActionKitFromSource } from "@/lib/ai";
 import { DEMO_KITS } from "@/lib/demo-kit";
 import { prisma } from "@/lib/prisma";
+import { FREE_WEEKLY_CREDIT_LIMIT, ONE_WEEK_MS } from "@/lib/profile";
 import { getOptionalUser } from "@/lib/supabase/server";
 import {
   extractYouTubeId,
@@ -9,9 +10,6 @@ import {
   slugifyTitle,
 } from "@/lib/youtube";
 import { GenerateKitRequestSchema } from "@/types/kit";
-
-const FREE_WEEKLY_LIMIT = 5;
-const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -79,19 +77,20 @@ export async function POST(request: Request) {
 
     if (profile && profile.plan === "FREE") {
       const now = new Date();
-      const windowExpired =
-        now.getTime() - profile.creditsResetAt.getTime() >= ONE_WEEK_MS;
+      const windowExpired = now.getTime() >= profile.creditsResetAt.getTime();
 
       if (windowExpired) {
         await prisma.profile.update({
           where: { id: user.id },
-          data: { weeklyCreditsUsed: 0, creditsResetAt: now },
+          data: {
+            weeklyCreditsUsed: 0,
+            creditsResetAt: new Date(now.getTime() + ONE_WEEK_MS),
+          },
         });
-      } else if (profile.weeklyCreditsUsed >= FREE_WEEKLY_LIMIT) {
+      } else if (profile.weeklyCreditsUsed >= FREE_WEEKLY_CREDIT_LIMIT) {
         return NextResponse.json(
           {
-            error:
-              "Weekly Free plan limit reached (5 Action Kits/week). Upgrade to Pro for unlimited kits.",
+            error: `Weekly Free plan limit reached (${FREE_WEEKLY_CREDIT_LIMIT} Action Kits/week). Upgrade to Pro for unlimited kits.`,
           },
           { status: 429 }
         );
@@ -146,6 +145,7 @@ export async function POST(request: Request) {
             id: user.id,
             email: user.email ?? `${user.id}@users.claros.local`,
             weeklyCreditsUsed: 1,
+            creditsResetAt: new Date(Date.now() + ONE_WEEK_MS),
           },
           update: {
             weeklyCreditsUsed: { increment: 1 },

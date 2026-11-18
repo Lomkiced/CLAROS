@@ -1,30 +1,27 @@
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
-import { Layers3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserMenu } from "@/components/workspace/user-menu";
-import { prisma } from "@/lib/prisma";
+import { getProfileForUser } from "@/lib/profile";
 import { getOptionalUser } from "@/lib/supabase/server";
 
 async function DashboardUserNav() {
   const user = await getOptionalUser();
-  let plan: "FREE" | "PRO" = "FREE";
-
-  if (user && process.env.DATABASE_URL) {
-    try {
-      const profile = await prisma.profile.findUnique({
-        where: { id: user.id },
-        select: { plan: true },
-      });
-      if (profile?.plan === "PRO") {
-        plan = "PRO";
-      }
-    } catch {
-      plan = "FREE";
-    }
+  if (!user) {
+    return (
+      <Link
+        href="/login?next=/dashboard"
+        className="text-sm font-medium text-foreground underline underline-offset-4"
+      >
+        Sign In
+      </Link>
+    );
   }
 
-  return <UserMenu email={user?.email ?? null} plan={plan} />;
+  const profile = await getProfileForUser(user.id);
+  const plan = profile?.plan ?? "FREE";
+
+  return <UserMenu email={user.email ?? null} plan={plan} />;
 }
 
 export default function DashboardLayout({
@@ -34,20 +31,20 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex items-center gap-6">
             <Link
               href="/"
-              className="flex items-center gap-2 font-semibold tracking-tight"
+              className="text-base font-semibold tracking-tight text-foreground"
             >
-              <span className="inline-flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                <Layers3 className="size-4" />
-              </span>
-              <span>Claros</span>
+              Claros
             </Link>
 
-            <nav className="hidden items-center gap-5 text-sm text-muted-foreground sm:flex">
+            <nav
+              aria-label="Workspace navigation"
+              className="hidden items-center gap-5 text-sm text-muted-foreground sm:flex"
+            >
               <Link
                 href="/dashboard"
                 className="font-medium text-foreground transition-colors"
@@ -56,13 +53,13 @@ export default function DashboardLayout({
               </Link>
               <Link
                 href="/kits"
-                className="hover:text-foreground transition-colors"
+                className="transition-colors hover:text-foreground"
               >
-                Public Kits
+                Public kits
               </Link>
               <Link
                 href="/pricing"
-                className="hover:text-foreground transition-colors"
+                className="transition-colors hover:text-foreground"
               >
                 Pricing
               </Link>
